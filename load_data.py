@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import pandas as pd
 import numpy as np
 import cv2
 
-#path '../datasets/fer2013/fer2013.csv'
+# path '../datasets/fer2013/fer2013.csv'
 
 
 def load_fer2013():
@@ -20,9 +23,10 @@ def load_fer2013():
     emotions = pd.get_dummies(data['emotion']).as_matrix()
     return faces, emotions
 
+
 def split_data(x, y, validation_split=.2):
     num_samples = len(x)
-    num_train_samples = int((1 - validation_split)*num_samples)
+    num_train_samples = int((1 - validation_split) * num_samples)
     train_x = x[:num_train_samples]
     train_y = y[:num_train_samples]
     val_x = x[num_train_samples:]
@@ -30,6 +34,7 @@ def split_data(x, y, validation_split=.2):
     train_data = (train_x, train_y)
     val_data = (val_x, val_y)
     return train_data, val_data
+
 
 def get_emotion(emotion):
     if emotion[0]:
@@ -46,3 +51,13 @@ def get_emotion(emotion):
         return 'surprise'
     elif emotion[6]:
         return 'neutral'
+
+
+def preprocess_input(x, v2=True):
+    x = x.astype('float32')
+    x = x / 255.0
+    if v2:
+        x = x - 0.5
+        x = x * 2.0
+    return x
+

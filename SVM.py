@@ -13,6 +13,9 @@ from sklearn.svm import SVC
 
 emotions = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
 data = {}
+data['detected_faces'] = 0
+data['undetected_faces'] = 0
+detected = 0
 
 
 def get_landmarks(image):
@@ -41,9 +44,11 @@ def get_landmarks(image):
             landmarks_vectorised.append((math.atan2(y, x) * 360) / (2 * math.pi))
 
         data['landmarks_vectorised'] = landmarks_vectorised
+        data['detected_faces'] += 1
         return data
     if len(detections) < 1:
         data['landmarks_vectorised'] = "error"
+        data['undetected_faces'] += 1
 
 
 def make_sets():
@@ -61,9 +66,7 @@ def make_sets():
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to grayscale
             clahe_image = clahe.apply(gray)
             get_landmarks(clahe_image)
-            if data['landmarks_vectorised'] == "error":
-                print("no face detected on this one")
-            else:
+            if data['landmarks_vectorised'] != "error":
                 training_data.append(data['landmarks_vectorised'])  # append image array to training data list
                 training_labels.append(emotions.index(emotion))
 
@@ -72,88 +75,44 @@ def make_sets():
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             clahe_image = clahe.apply(gray)
             get_landmarks(clahe_image)
-            if data['landmarks_vectorised'] == "error":
-                print("no face detected on this one")
-            else:
-                print("face detected")
+            if data['landmarks_vectorised'] != "error":
                 prediction_data.append(data['landmarks_vectorised'])
                 prediction_labels.append(emotions.index(emotion))
 
+    print('detected ' + str(data['detected_faces']))
+    print('undetected ' + str(data['undetected_faces']))
     return training_data, training_labels, prediction_data, prediction_labels
 
-def get_files(emotion): #Define function to get file list, randomly shuffle it and split 80/20
+def get_files(emotion):
     files_path = 'dataset/fer2013_images/' + emotion + '/*'
     files = glob.glob(files_path)
     random.shuffle(files)
-    training = files[:int(len(files)*0.05)] #get first 80% of file list
-    prediction = files[-int(len(files)*0.2):] #get last 20% of file list
+    training = files[:int(len(files)*0.08)]
+    prediction = files[-int(len(files)*0.2):]
     return training, prediction
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-clf = SVC(kernel='linear', probability=True, tol=1e-3)#, verbose = True) #Set the classifier as a support vector machines with polynomial kernel
+clf = SVC(kernel='linear', probability=True, tol=1e-3)
 
 accur_lin = []
 for i in range(0, 10):
-    print("Making sets %s" %i) #Make sets by random sampling 80/20%
+    print("Making sets %s" %i)
     training_data, training_labels, prediction_data, prediction_labels = make_sets()
 
-    npar_train = np.array(training_data) #Turn the training set into a numpy array for the classifier
+    npar_train = np.array(training_data)
     npar_trainlabs = np.array(training_labels)
-    print("training SVM linear %s" %i) #train SVM
+    print("training SVM linear %s" %i)
     clf.fit(npar_train, training_labels)
 
-    print("getting accuracies %s" %i) #Use score() function to get accuracy
+    print("getting accuracies %s" % i)
     npar_pred = np.array(prediction_data)
     pred_lin = clf.score(npar_pred, prediction_labels)
     print ("linear: ", pred_lin)
-    accur_lin.append(pred_lin) #Store accuracy in a list
+    accur_lin.append(pred_lin)
 
-print("Mean value lin svm: %s" %np.mean(accur_lin)) #FGet mean accuracy of the 10 runs
+print("Mean value lin svm: %s" %np.mean(accur_lin))
 
-
-# faces, emotions = load_fer2013()
-#
-# for i in range(faces.shape[0]):
-#     face = faces[i]
-#     new_face = []
-#     temp = []
-#     for p in range(0, 48):
-#         temp.clear()
-#         for j in range(0, 48):
-#             value = face[p][j][0]
-#             temp.append(value)
-#         new_face.append(temp[:])
-#
-#     new_face = np.asarray(new_face, dtype=np.uint8)
-#     print('dataset/fer2013_images/' + get_emotion(emotions[i]) + '/' + str(i) + '_' + '.png')
-#     cv2.imwrite('dataset/fer2013_images/' + get_emotion(emotions[i]) + '/' + str(i) + '.png', new_face)
-
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-# #dets = detector(img, 1)
-#
-img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-# clahe_image = clahe.apply(gray)
-#
-# detections = detector(clahe_image, 1)
-#
-#
-# print("Number of faces detected: {}".format(len(detections)))
-#
-# for i, d in enumerate(detections):
-#     print("Detection {}: Left: {} Top: {} Right: {} Bottom: {}".format(i, d.left(), d.top(), d.right(), d.bottom()))
-#
-#     shape = predictor(clahe_image, d)  # Get coordinates
-#     for j in range(1, 68):  # There are 68 landmark points on each face
-#         cv2.circle(img, (shape.part(j).x, shape.part(j).y), 1, (0, 0, 255), thickness=2)  # For each point, draw a red circle with thickness2 on the original frame
-#
-#win.clear_overlay()
-#win.set_image(new_face)
-#dlib.hit_enter_to_continue()
-
-#viewer = ImageViewer(img)
-#viewer.show()
 
 
 
