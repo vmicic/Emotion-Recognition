@@ -1,14 +1,10 @@
-import sys
-
-import dlib
 import glob
-import random
-from skimage import io
-import cv2
-import numpy as np
 import math
-from load_data import load_fer2013
-from load_data import get_emotion
+import random
+
+import cv2
+import dlib
+import numpy as np
 from sklearn.svm import SVC
 
 emotions = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
@@ -62,18 +58,14 @@ def make_sets():
         training, prediction = get_files(emotion)
         for item in training:
             image = cv2.imread(item)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            clahe_image = clahe.apply(gray)
-            get_landmarks(clahe_image)
+            get_landmarks(image)
             if data['landmarks_vectorised'] != "error":
                 training_data.append(data['landmarks_vectorised'])
                 training_labels.append(emotions.index(emotion))
 
         for item in prediction:
             image = cv2.imread(item)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            clahe_image = clahe.apply(gray)
-            get_landmarks(clahe_image)
+            get_landmarks(image)
             if data['landmarks_vectorised'] != "error":
                 prediction_data.append(data['landmarks_vectorised'])
                 prediction_labels.append(emotions.index(emotion))
@@ -81,6 +73,7 @@ def make_sets():
     print('detected ' + str(data['detected_faces']))
     print('undetected ' + str(data['undetected_faces']))
     return training_data, training_labels, prediction_data, prediction_labels
+
 
 def get_files(emotion):
     files_path = 'dataset/fer2013_images/' + emotion + '/*'
@@ -96,15 +89,15 @@ clf = SVC(kernel='linear', probability=True, tol=1e-3)
 
 accur_lin = []
 for i in range(0, 10):
-    print("Making sets %s" %i)
+    print("Making sets %s" % i)
     training_data, training_labels, prediction_data, prediction_labels = make_sets()
 
-    npar_train = np.array(training_data)
-    npar_trainlabs = np.array(training_labels)
-    print("training SVM linear %s" %i)
-    clf.fit(npar_train, training_labels)
+    train_data = np.array(training_data)
+    train_labels = np.array(training_labels)
+    print("training SVM linear " + str(i))
+    clf.fit(train_data, train_labels)
 
-    print("getting accuracies %s" % i)
+    print("getting predictions " + str(i))
     npar_pred = np.array(prediction_data)
     pred_lin = clf.score(npar_pred, prediction_labels)
     print ("linear: ", pred_lin)
