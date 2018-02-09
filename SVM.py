@@ -52,7 +52,6 @@ def make_sets():
     training_labels = []
     prediction_data = []
     prediction_labels = []
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     for emotion in emotions:
         print(" working on %s" % emotion)
         training, prediction = get_files(emotion)
