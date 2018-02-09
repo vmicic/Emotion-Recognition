@@ -21,16 +21,16 @@ detected = 0
 def get_landmarks(image):
     detections = detector(image, 1)
     for k, d in enumerate(detections):
-        shape = predictor(image, d)  # Draw Facial Landmarks with the predictor class
+        shape = predictor(image, d)
         xlist = []
         ylist = []
-        for i in range(0, 68):  # Store X and Y coordinates in two lists
+        for i in range(0, 68):
             xlist.append(float(shape.part(i).x))
             ylist.append(float(shape.part(i).y))
 
-        xmean = np.mean(xlist)  # Find both coordinates of centre of gravity
+        xmean = np.mean(xlist)
         ymean = np.mean(ylist)
-        xcentral = [(x - xmean) for x in xlist]  # Calculate distance centre <-> other points in both axes
+        xcentral = [(x - xmean) for x in xlist]
         ycentral = [(y - ymean) for y in ylist]
 
         landmarks_vectorised = []
@@ -60,14 +60,13 @@ def make_sets():
     for emotion in emotions:
         print(" working on %s" % emotion)
         training, prediction = get_files(emotion)
-        # Append data to training and prediction list, and generate labels 0-7
         for item in training:
-            image = cv2.imread(item)  # open image
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to grayscale
+            image = cv2.imread(item)
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             clahe_image = clahe.apply(gray)
             get_landmarks(clahe_image)
             if data['landmarks_vectorised'] != "error":
-                training_data.append(data['landmarks_vectorised'])  # append image array to training data list
+                training_data.append(data['landmarks_vectorised'])
                 training_labels.append(emotions.index(emotion))
 
         for item in prediction:
@@ -111,7 +110,7 @@ for i in range(0, 10):
     print ("linear: ", pred_lin)
     accur_lin.append(pred_lin)
 
-print("Mean value lin svm: %s" %np.mean(accur_lin))
+print("Mean value lin svm: %s" % np.mean(accur_lin))
 
 
 

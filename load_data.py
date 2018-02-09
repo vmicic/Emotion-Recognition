@@ -29,11 +29,11 @@ def split_data(x, y, validation_split=.2):
     num_train_samples = int((1 - validation_split) * num_samples)
     train_x = x[:num_train_samples]
     train_y = y[:num_train_samples]
-    val_x = x[num_train_samples:]
-    val_y = y[num_train_samples:]
+    validation_x = x[num_train_samples:]
+    validation_y = y[num_train_samples:]
     train_data = (train_x, train_y)
-    val_data = (val_x, val_y)
-    return train_data, val_data
+    validation_data = (validation_x, validation_y)
+    return train_data, validation_data
 
 
 def get_emotion(emotion):
@@ -53,11 +53,11 @@ def get_emotion(emotion):
         return 'neutral'
 
 
+# preprocess like Inception V3
 def preprocess_input(x, v2=True):
     x = x.astype('float32')
-    x = x / 255.0
-    if v2:
-        x = x - 0.5
-        x = x * 2.0
+    x /= 255.
+    x -= 0.5
+    x *= 2.
     return x
 
