@@ -21,7 +21,7 @@ train_faces, train_emotions = train_data
 csv_logger = CSVLogger("emotion_training.log", append=False)
 save_destination = 'trained_models/' + '.{epoch:02d}-{val_acc:.2f}.hdf5'
 model_checkpoint = ModelCheckpoint(save_destination, 'val_loss', verbose=1, save_best_only=True)
-early_stop = EarlyStopping('val_loss', patience=patience)
+early_stop = EarlyStopping('val_loss', patience=patience*3)
 reduce_lr = ReduceLROnPlateau('val_loss', factor=0.1, patience=patience, verbose=1)
 
 model = build_model(input_shape, num_classes)
