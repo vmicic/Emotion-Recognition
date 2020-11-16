@@ -1,12 +1,12 @@
-from keras import layers
-from keras.layers import Activation, Conv2D
-from keras.layers import BatchNormalization
-from keras.layers import GlobalAveragePooling2D
-from keras.layers import Input
-from keras.layers import MaxPooling2D
-from keras.layers import SeparableConv2D
-from keras.models import Model
-from keras.regularizers import l2
+from tensorflow.keras import layers
+from tensorflow.keras.layers import Activation, Conv2D
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import GlobalAveragePooling2D
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.layers import SeparableConv2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.regularizers import l2
 
 
 def build_model(input_shape, num_classes, l2_regularization=0.01):

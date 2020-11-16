@@ -1,8 +1,8 @@
-from keras.callbacks import CSVLogger, ModelCheckpoint, EarlyStopping
-from keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import CSVLogger, ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 from model import build_model
 from load_data import load_fer2013, preprocess_input, split_data
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # parameters
 batch_size = 32

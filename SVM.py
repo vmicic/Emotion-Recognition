@@ -7,7 +7,7 @@ import dlib
 import numpy as np
 from sklearn.svm import SVC
 
-emotions = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
+emotions = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
 data = {}
 data['detected_faces'] = 0
 data['undetected_faces'] = 0
@@ -15,6 +15,8 @@ detected = 0
 
 
 def get_landmarks(image):
+    detector = dlib.get_frontal_face_detector()
+    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
     detections = detector(image, 1)
     for k, d in enumerate(detections):
         shape = predictor(image, d)
@@ -55,19 +57,30 @@ def make_sets():
     for emotion in emotions:
         print(" working on %s" % emotion)
         training, prediction = get_files(emotion)
+        print("Emotion: {}, training size: {}, prediction size: {}".format(emotion, len(training), len(prediction)))
+        images_counter = 0
         for item in training:
+            images_counter += 1
             image = cv2.imread(item)
             get_landmarks(image)
-            if data['landmarks_vectorised'] != "error":
+            if data['landmarks_vectorised'] == "error":
+                print("face not detected")
+            else:
                 training_data.append(data['landmarks_vectorised'])
                 training_labels.append(emotions.index(emotion))
+                print("Emotion: {}, training image {}/{}".format(emotion, images_counter, len(training)))
 
+        images_counter = 0
         for item in prediction:
+            images_counter += 1
             image = cv2.imread(item)
             get_landmarks(image)
-            if data['landmarks_vectorised'] != "error":
+            if data['landmarks_vectorised'] == "error":
+                print("face not detected")
+            else:
                 prediction_data.append(data['landmarks_vectorised'])
                 prediction_labels.append(emotions.index(emotion))
+                print("Emotion: {}, prediction image {}/{}".format(emotion, images_counter, len(training)))
 
     print('detected ' + str(data['detected_faces']))
     print('undetected ' + str(data['undetected_faces']))
@@ -75,21 +88,21 @@ def make_sets():
 
 
 def get_files(emotion):
-    files_path = 'dataset/fer2013_images/' + emotion + '/*'
+    files_path = 'dataset/fer2013/images/' + emotion + '/*'
     files = glob.glob(files_path)
     random.shuffle(files)
-    training = files[:int(len(files)*0.08)]
-    prediction = files[-int(len(files)*0.2):]
+    training = files[:int(len(files)*0.04)]
+    prediction = files[-int(len(files)*0.02):]
     return training, prediction
 
-detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+
 clf = SVC(kernel='linear', probability=True, tol=1e-3)
 
 accur_lin = []
 for i in range(0, 10):
     print("Making sets %s" % i)
     training_data, training_labels, prediction_data, prediction_labels = make_sets()
+    print("Sets made")
 
     train_data = np.array(training_data)
     train_labels = np.array(training_labels)
@@ -103,6 +116,8 @@ for i in range(0, 10):
     accur_lin.append(pred_lin)
 
 print("Mean value lin svm: %s" % np.mean(accur_lin))
+
+
 
 
 
