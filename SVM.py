@@ -10,10 +10,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 emotions = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
-data = {}
-data['detected_faces'] = 0
-data['undetected_faces'] = 0
-detected = 0
 
 # dlib face detector works only with grayscale images
 detector = dlib.get_frontal_face_detector()
@@ -23,6 +19,9 @@ predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 def get_landmarks(image):
     # detector returns an array of rectangles where image is
     detections = detector(image, 1)
+
+    if len(detections) < 1:
+        return None
 
     for k, d in enumerate(detections):
         # cv2.rectangle(image, (d.left(), d.top()), (d.right(), d.bottom()), (255, 0, 255), 2)
@@ -48,12 +47,7 @@ def get_landmarks(image):
             landmarks_vectorised.append(dist)
             landmarks_vectorised.append((math.atan2(y_central, x_central) * 360) / (2 * math.pi))
 
-        data['landmarks_vectorised'] = landmarks_vectorised
-        data['detected_faces'] += 1
-        return data
-    if len(detections) < 1:
-        data['landmarks_vectorised'] = "error"
-        data['undetected_faces'] += 1
+        return landmarks_vectorised
 
 
 def make_sets():
@@ -61,25 +55,24 @@ def make_sets():
     training_labels = []
     prediction_data = []
     prediction_labels = []
+
     for emotion in emotions:
-        print(" working on %s" % emotion)
+        print("Working on {}".format(emotion))
         training, prediction = get_files(emotion)
         for item in training:
             image = cv2.imread(item)
-            get_landmarks(image)
-            if data['landmarks_vectorised'] != "error":
-                training_data.append(data['landmarks_vectorised'])
+            image_details = get_landmarks(image)
+            if image_details is not None:
+                training_data.append(image_details)
                 training_labels.append(emotions.index(emotion))
 
         for item in prediction:
             image = cv2.imread(item)
-            get_landmarks(image)
-            if data['landmarks_vectorised'] != "error":
-                prediction_data.append(data['landmarks_vectorised'])
+            image_details = get_landmarks(image)
+            if image_details is not None:
+                prediction_data.append(image_details)
                 prediction_labels.append(emotions.index(emotion))
 
-    print('detected ' + str(data['detected_faces']))
-    print('undetected ' + str(data['undetected_faces']))
     return training_data, training_labels, prediction_data, prediction_labels
 
 
@@ -88,7 +81,7 @@ def get_files(emotion):
     images = glob.glob(files_path)
     random.shuffle(images)
 
-    percentage_for_training = 0.04
+    percentage_for_training = 0.03
     percentage_for_prediction = 0.2
     training = images[:int(len(images) * percentage_for_training)]
     prediction = images[-int(len(images) * percentage_for_prediction):]
