@@ -6,6 +6,8 @@ import cv2
 import dlib
 import numpy as np
 from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 emotions = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
 data = {}
@@ -13,35 +15,38 @@ data['detected_faces'] = 0
 data['undetected_faces'] = 0
 detected = 0
 
+# dlib face detector works only with grayscale images
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-clahe = cv2.createCLAHE(clipLimit=1, tileGridSize=(2,3))
 
 
 def get_landmarks(image):
+    # detector returns an array of rectangles where image is
     detections = detector(image, 1)
-    for k, d in enumerate(detections):
-        shape = predictor(image, d)
-        xlist = []
-        ylist = []
-        for i in range(0, 68):
-            xlist.append(float(shape.part(i).x))
-            ylist.append(float(shape.part(i).y))
 
-        xmean = np.mean(xlist)
-        ymean = np.mean(ylist)
-        xcentral = [(x - xmean) for x in xlist]
-        ycentral = [(y - ymean) for y in ylist]
+    for k, d in enumerate(detections):
+        # cv2.rectangle(image, (d.left(), d.top()), (d.right(), d.bottom()), (255, 0, 255), 2)
+        # cv2.imshow("Image", image)
+        # cv2.waitKey()
+        shape = predictor(image, d)
+        x_list = []
+        y_list = []
+        for i in range(0, 68):
+            x_list.append(float(shape.part(i).x))
+            y_list.append(float(shape.part(i).y))
+
+        x_mean = np.mean(x_list)
+        y_mean = np.mean(y_list)
+        x_central_list = [(x - x_mean) for x in x_list]
+        y_central_list = [(y - y_mean) for y in y_list]
 
         landmarks_vectorised = []
-        for x, y, w, z in zip(xcentral, ycentral, xlist, ylist):
-            landmarks_vectorised.append(w)
-            landmarks_vectorised.append(z)
-            meannp = np.asarray((ymean, xmean))
-            coornp = np.asarray((z, w))
-            dist = np.linalg.norm(coornp - meannp)
+        for x_central, y_central, x, y in zip(x_central_list, y_central_list, x_list, y_list):
+            landmarks_vectorised.append(x)
+            landmarks_vectorised.append(y)
+            dist = np.linalg.norm(np.asarray((y_central, x_central)))
             landmarks_vectorised.append(dist)
-            landmarks_vectorised.append((math.atan2(y, x) * 360) / (2 * math.pi))
+            landmarks_vectorised.append((math.atan2(y_central, x_central) * 360) / (2 * math.pi))
 
         data['landmarks_vectorised'] = landmarks_vectorised
         data['detected_faces'] += 1
@@ -80,10 +85,13 @@ def make_sets():
 
 def get_files(emotion):
     files_path = 'dataset/fer2013/images/' + emotion + '/*'
-    files = glob.glob(files_path)
-    random.shuffle(files)
-    training = files[:int(len(files) * 0.04)]
-    prediction = files[-int(len(files) * 0.2):]
+    images = glob.glob(files_path)
+    random.shuffle(images)
+
+    percentage_for_training = 0.04
+    percentage_for_prediction = 0.2
+    training = images[:int(len(images) * percentage_for_training)]
+    prediction = images[-int(len(images) * percentage_for_prediction):]
     return training, prediction
 
 

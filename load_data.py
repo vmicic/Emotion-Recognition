@@ -20,7 +20,7 @@ def load_fer2013():
         faces.append(face.astype('float32'))
     faces = np.asarray(faces)
     faces = np.expand_dims(faces, -1)
-    emotions = pd.get_dummies(data['emotion']).as_matrix()
+    emotions = pd.get_dummies(data['emotion']).values
     return faces, emotions
 
 

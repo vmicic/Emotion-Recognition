@@ -13,10 +13,12 @@ input_shape = (48, 48, 1)
 patience = 12
 
 faces, emotions = load_fer2013()
+print("fer2013 loaded")
 faces = preprocess_input(faces)
 num_samples, num_classes = emotions.shape
 train_data, val_data = split_data(faces, emotions)
 train_faces, train_emotions = train_data
+print("Everything ready")
 
 csv_logger = CSVLogger("emotion_training.log", append=False)
 save_destination = 'trained_models/' + '.{epoch:02d}-{val_acc:.2f}.hdf5'
@@ -39,7 +41,7 @@ if data_augmentation:
     model.fit_generator(data_generator.flow(train_faces, train_emotions, batch_size),
                         steps_per_epoch=len(train_faces) / batch_size,
                         epochs=epochs, verbose=1,
-                        callbacks=[model_checkpoint, csv_logger, early_stop, reduce_lr],
+                        callbacks=[csv_logger, early_stop, reduce_lr],
                         validation_data=val_data)
 else:
     model.fit(train_faces, train_emotions,  batch_size=batch_size, epochs=epochs, validation_data=val_data)
