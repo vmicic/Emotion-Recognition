@@ -13,10 +13,12 @@ data['detected_faces'] = 0
 data['undetected_faces'] = 0
 detected = 0
 
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+clahe = cv2.createCLAHE(clipLimit=1, tileGridSize=(2,3))
+
 
 def get_landmarks(image):
-    detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
     detections = detector(image, 1)
     for k, d in enumerate(detections):
         shape = predictor(image, d)
@@ -57,30 +59,19 @@ def make_sets():
     for emotion in emotions:
         print(" working on %s" % emotion)
         training, prediction = get_files(emotion)
-        print("Emotion: {}, training size: {}, prediction size: {}".format(emotion, len(training), len(prediction)))
-        images_counter = 0
         for item in training:
-            images_counter += 1
             image = cv2.imread(item)
             get_landmarks(image)
-            if data['landmarks_vectorised'] == "error":
-                print("face not detected")
-            else:
+            if data['landmarks_vectorised'] != "error":
                 training_data.append(data['landmarks_vectorised'])
                 training_labels.append(emotions.index(emotion))
-                print("Emotion: {}, training image {}/{}".format(emotion, images_counter, len(training)))
 
-        images_counter = 0
         for item in prediction:
-            images_counter += 1
             image = cv2.imread(item)
             get_landmarks(image)
-            if data['landmarks_vectorised'] == "error":
-                print("face not detected")
-            else:
+            if data['landmarks_vectorised'] != "error":
                 prediction_data.append(data['landmarks_vectorised'])
                 prediction_labels.append(emotions.index(emotion))
-                print("Emotion: {}, prediction image {}/{}".format(emotion, images_counter, len(training)))
 
     print('detected ' + str(data['detected_faces']))
     print('undetected ' + str(data['undetected_faces']))
@@ -91,8 +82,8 @@ def get_files(emotion):
     files_path = 'dataset/fer2013/images/' + emotion + '/*'
     files = glob.glob(files_path)
     random.shuffle(files)
-    training = files[:int(len(files)*0.04)]
-    prediction = files[-int(len(files)*0.02):]
+    training = files[:int(len(files) * 0.04)]
+    prediction = files[-int(len(files) * 0.2):]
     return training, prediction
 
 
@@ -112,14 +103,8 @@ for i in range(0, 10):
     print("getting predictions " + str(i))
     npar_pred = np.array(prediction_data)
     pred_lin = clf.score(npar_pred, prediction_labels)
-    print ("linear: ", pred_lin)
+    print("linear: ", pred_lin)
     accur_lin.append(pred_lin)
 
 print("Mean value lin svm: %s" % np.mean(accur_lin))
-
-
-
-
-
-
-
+print(accur_lin)
